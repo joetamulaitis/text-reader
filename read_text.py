@@ -28,7 +28,7 @@ image = cv2.imread('text.jpg', cv2.IMREAD_GRAYSCALE)
 plt.imshow(image, cmap='gray')
 plt.show()
 
-def read_image(image2):
+def select_letters(image2):
     image = image2.copy()
     #canny thresholding?????
     # canny = cv2.Canny(image, 30, 200)
@@ -66,25 +66,76 @@ def read_image(image2):
             x2, y2, w2, h2 = cv2.boundingRect(contour2)
             
             letter = line[y2:y2+h2, x2:x2+w2]
-            
+            plt.imshow(letter, cmap='gray')
+            plt.show()
+
             letter = cv2.resize(letter, (28, 28))
             letter = np.reshape(letter, (1, 28, 28, 1))
             letter = tf.keras.utils.normalize(letter, axis=1)
-            # if i == 3:
-            #     plt.imshow(letter[0], cmap='gray')
-            #     plt.show()
+
             letters = np.append(letters, letter, axis=0)
 
     plt.imshow(image, cmap='gray')
     plt.show()  
 
     print(letters.shape)
-    for letter in letters:
-        plt.imshow(letter, cmap='gray')
-        plt.show()
+    # for letter in letters:
+    #     plt.imshow(letter, cmap='gray')
+    #     plt.show()
 
-    results = np.argmax(np.round(model.predict(letters)), axis=1)
-    return results
+    return letters
+
+def select_letters_manual(image):
+    image2 = image.copy()
+    letters = np.zeros((0,28,28,1))
+    run = True
+    while(run):
+        image3 = image2.copy()
+        xs = []
+        ys = []
+        i = 0
+        while i < 4:
+            if i == 0:
+                print('Top left corner')
+            elif i == 1:
+                print('Bottom left corner')
+            elif i == 2:
+                print('Bottom right corner')
+            else:
+                print('Top right corner')
+            plt.imshow(image3, cmap='gray')
+            plt.plot(xs, ys, 'o')
+            plt.show()
+            x = int(input('x: '))
+            y = int(input('y: '))
+
+            xs.append(x)
+            ys.append(y)
+
+            plt.imshow(image3, cmap='gray')
+            plt.plot(xs, ys, 'o')
+            plt.show()
+
+            use = input('Use this point? (Y/n) ')
+            if use != 'Y':
+                i -= 1
+                xs = xs[:-1]
+                ys = ys[:-1]
+            i += 1
+        plt.imshow(image2[ys[3]:ys[2], xs[0]:xs[3]], cmap='gray')
+        plt.show()
+        use = input('Use this letter? (Y/n) ')
+        if use == 'Y':
+            letter = image2[ys[3]:ys[2], xs[0]:xs[3]]
+            letter = cv2.resize(letter, (28, 28))
+            letter = np.reshape(letter, (1, 28, 28, 1))
+            letter = tf.keras.utils.normalize(letter, axis=1)
+            letters = np.append(letters, letter, axis=0)
+        use = input('Add another letter? (Y/n) ')
+        if use != 'Y':
+            run = False
+    return letters
+
 
 emnist_to_ascii = {0: 48,
 1: 49,
@@ -156,8 +207,9 @@ emnist_to_ascii = {0: 48,
 # results = np.argmax(np.round(model.predict(test_data[0:10])), axis=1)
 # print(results)
 # print(test_labels[0:10])
-
-results = read_image(image)
+letters = select_letters_manual(image)
+#letters = select_letters(image)
+results = np.argmax(np.round(model.predict(letters)), axis=1)
 results = np.vectorize(emnist_to_ascii.get)(results)
 results = [chr(c) for c in results]
 
