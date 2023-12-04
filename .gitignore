@@ -1,5 +1,5 @@
 .env
-.png
-.jfif
-.jpg
+*.png
+*.jfif
+*.jpg
 env/
