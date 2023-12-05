@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 import matplotlib.pyplot as plt
 import cv2
+import pytesseract
 from emnist import extract_test_samples
 
 model = tf.keras.Sequential([
@@ -24,7 +25,7 @@ model = tf.keras.Sequential([
 
 model.load_weights('trained_model.keras')
 
-image = cv2.imread('text.jpg', cv2.IMREAD_GRAYSCALE)
+image = cv2.imread('text.png', cv2.IMREAD_GRAYSCALE)
 plt.imshow(image, cmap='gray')
 plt.show()
 
@@ -134,7 +135,48 @@ def select_letters_manual(image):
         use = input('Add another letter? (Y/n) ')
         if use != 'Y':
             run = False
-    return letters
+    # for letter in letters:
+    #     plt.imshow(letter, cmap='gray')
+    #     plt.show()
+    #     plt.imshow(255-letter, cmap='gray')
+    #     plt.show()
+    return 255-letters
+
+#https://stackoverflow.com/questions/50951955/pytesseract-tesseractnotfound-error-tesseract-is-not-installed-or-its-not-i
+def select_letters_pytesseract(image):
+    image2 = image.copy()
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+    #make image black and white to make finding contours work better
+    thresh = cv2.threshold(image2, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)[1]
+    #thresh = 255 - thresh
+    plt.imshow(thresh, cmap='gray')
+    plt.show()
+
+    #for the test image, 12X12 boxes every line, 2X2 gets close to boxing letters
+    rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (12,12))
+    dilation = cv2.dilate(thresh.copy(), rect_kernel, iterations = 1)
+
+    plt.imshow(dilation, cmap='gray')
+    plt.show()
+
+    contours = cv2.findContours(dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
+    letters = np.zeros((0, 28, 28, 1))
+    words = []
+    for i, contour in enumerate(contours):
+        x, y, w, h = cv2.boundingRect(contour)
+        rect = cv2.rectangle(image2, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+
+        line = thresh[y:y+h, x:x+w]
+        plt.imshow(line, cmap='gray')
+        plt.show()
+        text = pytesseract.image_to_string(line)
+        words.append(text.strip())
+    print(words[::-1])
+
+select_letters_pytesseract(image)
+
 
 
 emnist_to_ascii = {0: 48,
@@ -207,14 +249,14 @@ emnist_to_ascii = {0: 48,
 # results = np.argmax(np.round(model.predict(test_data[0:10])), axis=1)
 # print(results)
 # print(test_labels[0:10])
-letters = select_letters_manual(image)
+#letters = select_letters_manual(image)
 #letters = select_letters(image)
-results = np.argmax(np.round(model.predict(letters)), axis=1)
-results = np.vectorize(emnist_to_ascii.get)(results)
-results = [chr(c) for c in results]
+#results = np.argmax(np.round(model.predict(letters)), axis=1)
+#results = np.vectorize(emnist_to_ascii.get)(results)
+#results = [chr(c) for c in results]
 
 # labels = np.vectorize(emnist_to_ascii.get)(test_labels[0:10])
 # labels = [chr(c) for c in labels]
 
-print(results)
+#print(results)
 # print(labels)
