@@ -25,6 +25,8 @@ Additionally, Tesseract OCR must be installed to run this software. The link for
     -   `3` for tesseract OCR.
 4. The script will now run, which will extract the text off of the image and then read it aloud with the text-to-speech engine.
 
+(Optionally, if you would like to retrain the model you can run `train_model.py`.)
+
 ## References
 
  - https://stackoverflow.com/a/52231794/3677087
