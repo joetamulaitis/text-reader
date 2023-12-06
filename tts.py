@@ -2,13 +2,13 @@ import pyttsx3
 import autocorrect
 
 
-def tts(inputString):
+def tts_say(inputString):
     engine = pyttsx3.init()
     engine.setProperty('rate', 300)
     spell = autocorrect.Speller()
     engine.say(spell(inputString))
     engine.runAndWait()
-    # print(engine.getProperty('rate'))
+    print(inputString)
 
 def ttsSaveToFile(inputString):
     engine = pyttsx3.init()
@@ -18,5 +18,3 @@ def ttsSaveToFile(inputString):
     engine.runAndWait()
 
 
-tts("hello")
-ttsSaveToFile("hello")
