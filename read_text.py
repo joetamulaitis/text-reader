@@ -25,11 +25,12 @@ model = tf.keras.Sequential([
 
 model.load_weights('trained_model.keras')
 
-image = cv2.imread('text.png', cv2.IMREAD_GRAYSCALE)
-plt.imshow(image, cmap='gray')
-plt.show()
+# image = cv2.imread('text.png', cv2.IMREAD_GRAYSCALE)
+# plt.imshow(image, cmap='gray')
+# plt.show()
 
-def select_letters(image2):
+def select_letters(image_path):
+    image2 = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     image = image2.copy()
     #canny thresholding?????
     # canny = cv2.Canny(image, 30, 200)
@@ -39,15 +40,15 @@ def select_letters(image2):
     #make image black and white to make finding contours work better
     thresh = cv2.threshold(image, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)[1]
     #thresh = 255 - thresh
-    plt.imshow(thresh, cmap='gray')
-    plt.show()
+    # plt.imshow(thresh, cmap='gray')
+    # plt.show()
 
     #for the test image, 12X12 boxes every line, 2X2 gets close to boxing letters
     rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (12,12))
     dilation = cv2.dilate(thresh.copy(), rect_kernel, iterations = 1)
 
-    plt.imshow(dilation, cmap='gray')
-    plt.show()
+    # plt.imshow(dilation, cmap='gray')
+    # plt.show()
 
     contours = cv2.findContours(dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
     letters = np.zeros((0, 28, 28, 1))
@@ -67,8 +68,8 @@ def select_letters(image2):
             x2, y2, w2, h2 = cv2.boundingRect(contour2)
             
             letter = line[y2:y2+h2, x2:x2+w2]
-            plt.imshow(letter, cmap='gray')
-            plt.show()
+            # plt.imshow(letter, cmap='gray')
+            # plt.show()
 
             letter = cv2.resize(letter, (28, 28))
             letter = np.reshape(letter, (1, 28, 28, 1))
@@ -76,17 +77,21 @@ def select_letters(image2):
 
             letters = np.append(letters, letter, axis=0)
 
-    plt.imshow(image, cmap='gray')
-    plt.show()  
+    # plt.imshow(image, cmap='gray')
+    # plt.show()  
 
-    print(letters.shape)
+    # print(letters.shape)
     # for letter in letters:
     #     plt.imshow(letter, cmap='gray')
     #     plt.show()
+    results = np.argmax(np.round(model.predict(letters)), axis=1)
+    results = np.vectorize(emnist_to_ascii.get)(results)
+    results = [chr(c) for c in results]
 
-    return letters
+    return results
 
-def select_letters_manual(image):
+def select_letters_manual(image_path):
+    image = cv2.imread('image_path', cv2.IMREAD_GRAYSCALE)
     image2 = image.copy()
     letters = np.zeros((0,28,28,1))
     run = True
@@ -140,25 +145,31 @@ def select_letters_manual(image):
     #     plt.show()
     #     plt.imshow(255-letter, cmap='gray')
     #     plt.show()
-    return 255-letters
+    results = np.argmax(np.round(model.predict(letters)), axis=1)
+    results = np.vectorize(emnist_to_ascii.get)(results)
+    results = [chr(c) for c in results]
+
+    return results
 
 #https://stackoverflow.com/questions/50951955/pytesseract-tesseractnotfound-error-tesseract-is-not-installed-or-its-not-i
-def select_letters_pytesseract(image):
+#https://www.geeksforgeeks.org/text-detection-and-extraction-using-opencv-and-ocr/
+def select_letters_pytesseract(image_path):
+    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     image2 = image.copy()
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
     #make image black and white to make finding contours work better
     thresh = cv2.threshold(image2, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)[1]
     #thresh = 255 - thresh
-    plt.imshow(thresh, cmap='gray')
-    plt.show()
+    # plt.imshow(thresh, cmap='gray')
+    # plt.show()
 
     #for the test image, 12X12 boxes every line, 2X2 gets close to boxing letters
     rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (12,12))
     dilation = cv2.dilate(thresh.copy(), rect_kernel, iterations = 1)
 
-    plt.imshow(dilation, cmap='gray')
-    plt.show()
+    # plt.imshow(dilation, cmap='gray')
+    # plt.show()
 
     contours = cv2.findContours(dilation.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
     letters = np.zeros((0, 28, 28, 1))
@@ -169,13 +180,13 @@ def select_letters_pytesseract(image):
 
 
         line = thresh[y:y+h, x:x+w]
-        plt.imshow(line, cmap='gray')
-        plt.show()
+        # plt.imshow(line, cmap='gray')
+        # plt.show()
         text = pytesseract.image_to_string(line)
         words.append(text.strip())
-    print(words[::-1])
+    return words[::-1]
 
-select_letters_pytesseract(image)
+# select_letters_pytesseract(image)
 
 
 
@@ -251,12 +262,7 @@ emnist_to_ascii = {0: 48,
 # print(test_labels[0:10])
 #letters = select_letters_manual(image)
 #letters = select_letters(image)
-#results = np.argmax(np.round(model.predict(letters)), axis=1)
-#results = np.vectorize(emnist_to_ascii.get)(results)
-#results = [chr(c) for c in results]
 
-# labels = np.vectorize(emnist_to_ascii.get)(test_labels[0:10])
-# labels = [chr(c) for c in labels]
 
 #print(results)
 # print(labels)

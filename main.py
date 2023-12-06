@@ -1,8 +1,21 @@
-#this doesnt do anything yet i gotta finish the read text stuff first
+from tts import tts_say
+from read_text import select_letters, select_letters_manual, select_letters_pytesseract
 
 
-import tts.py
-import read_text.py
+image = (input('Name of image file: '))
 
-image_text = read_text()
-tts(image_text)
+method = int((input('1. Automatic letter selection\n2. Manual letter selection\n3. Tesseract OCR\n')))
+
+if method == 1:
+    image_text = select_letters(image)
+    text = " ".join(image_text)
+    tts_say(text)
+elif method == 2:
+    image_text = select_letters_manual(image)
+    text = " ".join(image_text)
+    tts_say(text)
+elif method == 3:
+    image_text = select_letters_pytesseract(image)
+    text = " ".join(image_text)
+    tts_say(text)
+
