@@ -3,7 +3,9 @@ Our CS 445 project is a OCR engine that can read characters/words off of images 
 
 ## Authors
 Joe Tamulaitis - **jpt5**
+
 Ben Rosen - **rosen14**
+
 Eric Armendariz - **earmen3**
 
 ## Prepare to run
